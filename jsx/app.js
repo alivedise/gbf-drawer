@@ -2,20 +2,30 @@
 
 (function(exports) {
   exports.App = React.createClass({
-    SSR_SCORE: 97,
-    SR_SCORE: 82,
     getInitialState: function() {
       this.stores = [];
       return {
         money: 0,
         results: [],
-        newResult: []
+        newResult: [],
+        SSR_SCORE: 97,
+        SR_SCORE: 82
       }
+    },
+    onChange: function() {
+      this.setState({
+        SSR_SCORE: this.refs.god.value ? 94 : 97
+      });
     },
     componentDidMount: function() {
       for (var id in window.GachaList) {
         this.stores.push(window.GachaList[id]);
       }
+
+      $("[name='my-checkbox']").bootstrapSwitch();
+    },
+    componentDidUpdate: function() {
+      $("[name='my-checkbox']").bootstrapSwitch();
     },
     getRandom: function(rarity) {
       var item;
@@ -28,9 +38,9 @@
       var result = [];
       for (var i = 0; i < time; i++) {
         var score = Math.ceil(Math.random() * 100);
-        if (score > this.SSR_SCORE) {
+        if (score > this.state.SSR_SCORE) {
           result.push(this.getRandom('ssr'));
-        } else if (score > this.SR_SCORE) {
+        } else if (score > this.state.SR_SCORE) {
           result.push(this.getRandom('sr'));
         } else {
           result.push(this.getRandom('r'));
@@ -75,7 +85,13 @@
           break;
       }
     },
+    getPercentage: function(count) {
+      return this.state.results.length ? (100*count/(this.state.results.length)).toFixed(2) + '%' : '0%'
+    },
     render: function() {
+      var ssr = 0;
+      var sr = 0;
+      var r = 0;
       var resultDOM = this.state.newResult.map(function(item) {
         var character = '';
         if (window.GachaList[item.id].character_img) {
@@ -90,6 +106,13 @@
         resultDOM = <div className="container"><div className="row">{resultDOM}</div></div>
       }
       var totalDOM = this.state.results.map(function(item) {
+        if (item.rarity === 'ssr') {
+          ssr++;
+        } else if (item.rarity === 'sr') {
+          sr++;
+        } else {
+          r++;
+        }
         return <div className="thumb col-md-1"><img src={window.GachaList[item.id].img}></img></div>
       });
       if (totalDOM.length) {
@@ -97,14 +120,20 @@
       }
       return <div>
                 <div key="control">
-                  <button className="btn btn-info" id="single" onClick={this.onClick}>單抽</button>
-                  <button className="btn btn-info"  id="ten" onClick={this.onClick}>十抽</button>
-                  <button className="btn btn-warning"  id="clear" onClick={this.onClick}>重來</button>
+                  <div className="row">
+                    <label>神祭</label>
+                    <input ref="god" type="checkbox" name="my-checkbox" onChange={this.onChange} />
+                  </div>
+                  <div className="row">
+                    <button className="btn btn-info" id="single" onClick={this.onClick}>單抽</button>
+                    <button className="btn btn-info"  id="ten" onClick={this.onClick}>十抽</button>
+                    <button className="btn btn-warning"  id="clear" onClick={this.onClick}>重來</button>
+                  </div>
                 </div>
                 <div id="result" ref="result" key="result">
                   {resultDOM}
                 </div>
-                <h3>累計: {this.state.money}</h3>
+                <h3>累計: {this.state.money} [SSR: {ssr}({this.getPercentage(ssr)}) ,SR: {sr}({this.getPercentage(sr)}), R: {r}({this.getPercentage(r)})]</h3>
                 <div id="total" key="total" ref="total">
                   {totalDOM}
                 </div>
