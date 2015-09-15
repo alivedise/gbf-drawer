@@ -9,12 +9,18 @@
         results: [],
         newResult: [],
         SSR_SCORE: 97,
-        SR_SCORE: 82
+        SR_SCORE: 82,
+        must_ssr: false
       }
     },
-    onChange: function() {
+    onChange: function(value) {
       this.setState({
-        SSR_SCORE: this.refs.god.value ? 94 : 97
+        SSR_SCORE: value ? 94 : 97
+      });
+    },
+    onMustChange: function(value) {
+      this.setState({
+        must_ssr: value
       });
     },
     componentDidMount: function() {
@@ -22,10 +28,16 @@
         this.stores.push(window.GachaList[id]);
       }
 
-      $("[name='my-checkbox']").bootstrapSwitch();
+      $('input').bootstrapSwitch('size', 'mini');
+      $('input#fes').on('switchChange.bootstrapSwitch', function(event, state) {
+        this.onChange(state);
+      }.bind(this));
+      $('input#must').on('switchChange.bootstrapSwitch', function(event, state) {
+        this.onMustChange(state);
+      }.bind(this));
     },
     componentDidUpdate: function() {
-      $("[name='my-checkbox']").bootstrapSwitch();
+      $('input').bootstrapSwitch();
     },
     getRandom: function(rarity) {
       var item;
@@ -48,10 +60,18 @@
       }
       return result;
     },
+    ensureSSR: function(array) {
+      if (this.state.must_ssr) {
+        if (!array.some(function(result) {return result.rarity === 'ssr'})) {
+          array[array.length - 1] = this.getRandom('ssr');
+        }
+      }
+    },
     drawTen: function() {
       var money = this.state.money;
       var results = this.state.results;
       var newResult = this.draw(10);
+      this.ensureSSR(newResult);
       this.setState({
         money: money + 3000,
         results: results.concat(newResult),
@@ -62,6 +82,7 @@
       var money = this.state.money;
       var results = this.state.results;
       var newResult = this.draw(1);
+      this.ensureSSR(newResult);
       this.setState({
         money: money + 300,
         results: results.concat(newResult),
@@ -121,8 +142,14 @@
       return <div>
                 <div key="control">
                   <div className="row">
-                    <label>神祭</label>
-                    <input ref="god" type="checkbox" name="my-checkbox" onChange={this.onChange} />
+                    <div className="col-md-3">
+                      <label>神祭</label>
+                      <input id="fes" type="checkbox" name="fes" onChange={this.onChange} />
+                    </div>
+                    <div className="col-md-3">
+                      <label>必得</label>
+                      <input id="must" type="checkbox" name="must" onChange={this.onMustChange} />
+                    </div>
                   </div>
                   <div className="row">
                     <button className="btn btn-info" id="single" onClick={this.onClick}>單抽</button>

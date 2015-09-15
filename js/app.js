@@ -2,7 +2,7 @@
 
 (function (exports) {
   exports.App = React.createClass({
-    displayName: "App",
+    displayName: 'App',
 
     getInitialState: function getInitialState() {
       this.stores = [];
@@ -11,12 +11,18 @@
         results: [],
         newResult: [],
         SSR_SCORE: 97,
-        SR_SCORE: 82
+        SR_SCORE: 82,
+        must_ssr: false
       };
     },
-    onChange: function onChange() {
+    onChange: function onChange(value) {
       this.setState({
-        SSR_SCORE: this.refs.god.value ? 94 : 97
+        SSR_SCORE: value ? 94 : 97
+      });
+    },
+    onMustChange: function onMustChange(value) {
+      this.setState({
+        must_ssr: value
       });
     },
     componentDidMount: function componentDidMount() {
@@ -24,10 +30,16 @@
         this.stores.push(window.GachaList[id]);
       }
 
-      $("[name='my-checkbox']").bootstrapSwitch();
+      $('input').bootstrapSwitch('size', 'mini');
+      $('input#fes').on('switchChange.bootstrapSwitch', (function (event, state) {
+        this.onChange(state);
+      }).bind(this));
+      $('input#must').on('switchChange.bootstrapSwitch', (function (event, state) {
+        this.onMustChange(state);
+      }).bind(this));
     },
     componentDidUpdate: function componentDidUpdate() {
-      $("[name='my-checkbox']").bootstrapSwitch();
+      $('input').bootstrapSwitch();
     },
     getRandom: function getRandom(rarity) {
       var item;
@@ -50,10 +62,20 @@
       }
       return result;
     },
+    ensureSSR: function ensureSSR(array) {
+      if (this.state.must_ssr) {
+        if (!array.some(function (result) {
+          return result.rarity === 'ssr';
+        })) {
+          array[array.length - 1] = this.getRandom('ssr');
+        }
+      }
+    },
     drawTen: function drawTen() {
       var money = this.state.money;
       var results = this.state.results;
       var newResult = this.draw(10);
+      this.ensureSSR(newResult);
       this.setState({
         money: money + 3000,
         results: results.concat(newResult),
@@ -64,6 +86,7 @@
       var money = this.state.money;
       var results = this.state.results;
       var newResult = this.draw(1);
+      this.ensureSSR(newResult);
       this.setState({
         money: money + 300,
         results: results.concat(newResult),
@@ -97,22 +120,22 @@
       var resultDOM = this.state.newResult.map(function (item) {
         var character = '';
         if (window.GachaList[item.id].character_img) {
-          character = React.createElement("img", { className: "character", src: window.GachaList[item.id].character_img });
+          character = React.createElement('img', { className: 'character', src: window.GachaList[item.id].character_img });
         }
         return React.createElement(
-          "div",
-          { className: "col-lg-3 col-md-4 col-xs-6 thumb" },
-          React.createElement("img", { src: window.GachaList[item.id].img }),
+          'div',
+          { className: 'col-lg-3 col-md-4 col-xs-6 thumb' },
+          React.createElement('img', { src: window.GachaList[item.id].img }),
           character
         );
       });
       if (resultDOM.length) {
         resultDOM = React.createElement(
-          "div",
-          { className: "container" },
+          'div',
+          { className: 'container' },
           React.createElement(
-            "div",
-            { className: "row" },
+            'div',
+            { className: 'row' },
             resultDOM
           )
         );
@@ -126,85 +149,99 @@
           r++;
         }
         return React.createElement(
-          "div",
-          { className: "thumb col-md-1" },
-          React.createElement("img", { src: window.GachaList[item.id].img })
+          'div',
+          { className: 'thumb col-md-1' },
+          React.createElement('img', { src: window.GachaList[item.id].img })
         );
       });
       if (totalDOM.length) {
         totalDOM = React.createElement(
-          "div",
-          { className: "container" },
+          'div',
+          { className: 'container' },
           React.createElement(
-            "div",
-            { className: "row" },
+            'div',
+            { className: 'row' },
             totalDOM
           )
         );
       }
       return React.createElement(
-        "div",
+        'div',
         null,
         React.createElement(
-          "div",
-          { key: "control" },
+          'div',
+          { key: 'control' },
           React.createElement(
-            "div",
-            { className: "row" },
+            'div',
+            { className: 'row' },
             React.createElement(
-              "label",
-              null,
-              "神祭"
+              'div',
+              { className: 'col-md-3' },
+              React.createElement(
+                'label',
+                null,
+                '神祭'
+              ),
+              React.createElement('input', { id: 'fes', type: 'checkbox', name: 'fes', onChange: this.onChange })
             ),
-            React.createElement("input", { ref: "god", type: "checkbox", name: "my-checkbox", onChange: this.onChange })
+            React.createElement(
+              'div',
+              { className: 'col-md-3' },
+              React.createElement(
+                'label',
+                null,
+                '必得'
+              ),
+              React.createElement('input', { id: 'must', type: 'checkbox', name: 'must', onChange: this.onMustChange })
+            )
           ),
           React.createElement(
-            "div",
-            { className: "row" },
+            'div',
+            { className: 'row' },
             React.createElement(
-              "button",
-              { className: "btn btn-info", id: "single", onClick: this.onClick },
-              "單抽"
+              'button',
+              { className: 'btn btn-info', id: 'single', onClick: this.onClick },
+              '單抽'
             ),
             React.createElement(
-              "button",
-              { className: "btn btn-info", id: "ten", onClick: this.onClick },
-              "十抽"
+              'button',
+              { className: 'btn btn-info', id: 'ten', onClick: this.onClick },
+              '十抽'
             ),
             React.createElement(
-              "button",
-              { className: "btn btn-warning", id: "clear", onClick: this.onClick },
-              "重來"
+              'button',
+              { className: 'btn btn-warning', id: 'clear', onClick: this.onClick },
+              '重來'
             )
           )
         ),
         React.createElement(
-          "div",
-          { id: "result", ref: "result", key: "result" },
+          'div',
+          { id: 'result', ref: 'result', key: 'result' },
           resultDOM
         ),
         React.createElement(
-          "h3",
+          'h3',
           null,
-          "累計: ",
+          '累計: ',
           this.state.money,
-          " [SSR: ",
+          ' [SSR: ',
           ssr,
-          "(",
+          '(',
           this.getPercentage(ssr),
-          ") ,SR: ",
+          ') ,SR: ',
           sr,
-          "(",
+          '(',
           this.getPercentage(sr),
-          "), R: ",
+          '), R: ',
           r,
-          "(",
+          '(',
           this.getPercentage(r),
-          ")]"
+          ')]'
         ),
         React.createElement(
-          "div",
-          { id: "total", key: "total", ref: "total" },
+          'div',
+          { id: 'total', key: 'total', ref: 'total' },
           totalDOM
         )
       );
