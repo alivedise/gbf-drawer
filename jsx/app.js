@@ -67,11 +67,19 @@
         }
       }
     },
+    ensureSR: function(array) {
+      if (array.length === 10) {
+        if (!array.some(function(result) {return result.rarity !== 'r'})) {
+          array[array.length - 1] = this.getRandom('sr');
+        }
+      }
+    },
     drawTen: function() {
       var money = this.state.money;
       var results = this.state.results;
       var newResult = this.draw(10);
       this.ensureSSR(newResult);
+      this.ensureSR(newResult);
       this.setState({
         money: money + 3000,
         results: results.concat(newResult),
